@@ -193,7 +193,16 @@ var gallery = {
             // the photo object..
           });
         })(photo, curAlbum);
-        curAlbum.photos.push(photo);
+
+          console.log(photo.name)
+          if(photo.name.indexOf('thumb') == -1){
+              curAlbum.photos.push(photo);
+          }
+          else{
+              console.log('Ignoring: ' + photo.name);
+          }
+
+
       }
     }
 
@@ -401,29 +410,50 @@ var gallery = {
         if (thumbTest.test(url)){
           url = req.url = url.replace("&tn=1", "");
           var imagePath = me.static + decodeURI(url);
-          if (me.imageCache[imagePath]){
-            res.contentType('image/jpg');
-            res.end(me.imageCache[imagePath], 'binary');
-          }else{
-            fs.readFile(imagePath, 'binary', function(err, file){
-              if (err){
-                console.log(err);
-                return res.send(err);
+
+          console.log("Test1: " + imagePath);
+
+          fs.exists(imagePath + '_thumb.jpg', function (exists) {
+              if (exists){
+                  console.log("Is on disk...") ;
+                  fs.readFile(imagePath + '_thumb.jpg', 'binary', function(err, file){
+                      if (err){
+                          console.log(err);
+                          util.inspect(err);
+                          res.send('error reading thumb');
+                      }
+
+                      res.contentType('image/jpg');
+                      res.end(file, 'binary');
+                  });
+                  //res.contentType('image/jpg');
+                  //res.end(me.imageCache[imagePath], 'binary');
+              }else{
+                  console.log("Is NOT cached...") ;
+                  fs.readFile(imagePath, 'binary', function(err, file){
+                      if (err){
+                          console.log(err);
+                          return res.send(err);
+                      }
+                      im.resize({
+                          srcData: file,
+                          width:   256
+                      }, function(err, binary, stderr){
+                          if (err){
+                              util.inspect(err);
+                              res.send('error generating thumb');
+                          }
+
+                          fs.writeFileSync(imagePath + '_thumb.jpg', binary, 'binary');
+
+                          res.contentType('image/jpg');
+                          res.end(binary, 'binary');
+
+                          me.imageCache[imagePath] = binary;
+                      });
+                  });
               }
-              im.resize({
-                srcData: file,
-                width:   256
-              }, function(err, binary, stderr){
-                if (err){
-                  util.inspect(err);
-                  res.send('error generating thumb');
-                }
-                res.contentType('image/jpg');
-                res.end(binary, 'binary');
-                me.imageCache[imagePath] = binary;
-              });
-            });
-          }
+          });
           return;
         }
         // Not the right URL. We have no business here. Onwards!
