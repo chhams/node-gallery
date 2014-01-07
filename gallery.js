@@ -179,8 +179,7 @@ var gallery = {
           path: filepath
         };
   
-        //curAlbum.photos.push(photo);
-  
+        // curAlbum.photos.push(photo);
         // we have a photo object - let's try get it's exif data. We've
         // already pushed into curAlbum, no rush getting exif now!
         // Create a closure to give us scope to photo
@@ -201,8 +200,6 @@ var gallery = {
           else{
               console.log('Ignoring: ' + photo.name);
           }
-
-
       }
     }
 
@@ -315,7 +312,23 @@ var gallery = {
         var photo = photos[i];
         if (photo.name===photoName){
 
-          return gallery.afterGettingItem(null, {type: 'photo', photo: photo}, cb);
+            var t =  "resources/" + gallery.directory + "/" + photo.path;
+            console.log(t);
+
+            fs.readFile(t, 'binary', function(err, file){
+            im.resize({
+                srcData: file,
+                width:   800
+            }, function(err, binary, stderr){
+                if (err){
+                    console.log(err);
+                }
+                else{
+                    fs.writeFileSync(t + '.thumb.800.jpg', binary, 'binary');
+                }
+            });});
+
+            return gallery.afterGettingItem(null, {type: 'photo', photo: photo}, cb);
         }
       }
 
@@ -356,6 +369,10 @@ var gallery = {
     return this.afterGettingItem(null, {type: 'album', album: album}, cb);
 
   },
+  resizeImage: function(){
+
+  },
+
   /*
    * Private function which massages the return type into something useful to a website.
    * Builds stuff like a breadcrumb, back URL..
@@ -409,6 +426,7 @@ var gallery = {
           url = req.url = url.replace("&tn=1", "");
           var imagePath = me.static + decodeURI(url);
 
+          console.log("Urg: " + imagePath)
           fs.exists(imagePath + '.thumb.jpg', function (exists) {
               if (exists){
                   console.log("Is on disk...") ;

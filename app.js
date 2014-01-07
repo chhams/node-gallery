@@ -20,6 +20,9 @@ app.get('/gallery*', function(req, res){
   var data = req.gallery;
   data.layout = false; // Express 2.5.* support, don't look for layout.ejs
 
+  //console.log("in request");
+  //console.dir(req);
+
   res.render(data.type + '.ejs', data);
 });
 
