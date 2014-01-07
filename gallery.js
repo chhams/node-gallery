@@ -318,7 +318,7 @@ var gallery = {
             fs.readFile(t, 'binary', function(err, file){
             im.resize({
                 srcData: file,
-                width:   800
+                width:   1200
             }, function(err, binary, stderr){
                 if (err){
                     console.log(err);
