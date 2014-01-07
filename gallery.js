@@ -411,12 +411,10 @@ var gallery = {
           url = req.url = url.replace("&tn=1", "");
           var imagePath = me.static + decodeURI(url);
 
-          console.log("Test1: " + imagePath);
-
-          fs.exists(imagePath + '_thumb.jpg', function (exists) {
+          fs.exists(imagePath + '.thumb.jpg', function (exists) {
               if (exists){
                   console.log("Is on disk...") ;
-                  fs.readFile(imagePath + '_thumb.jpg', 'binary', function(err, file){
+                  fs.readFile(imagePath + '.thumb.jpg', 'binary', function(err, file){
                       if (err){
                           console.log(err);
                           util.inspect(err);
@@ -437,14 +435,14 @@ var gallery = {
                       }
                       im.resize({
                           srcData: file,
-                          width:   256
+                          width:   128
                       }, function(err, binary, stderr){
                           if (err){
                               util.inspect(err);
                               res.send('error generating thumb');
                           }
 
-                          fs.writeFileSync(imagePath + '_thumb.jpg', binary, 'binary');
+                          fs.writeFileSync(imagePath + '.thumb.jpg', binary, 'binary');
 
                           res.contentType('image/jpg');
                           res.end(binary, 'binary');
