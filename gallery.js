@@ -400,8 +400,6 @@ var gallery = {
       requestParams = {},
       image = false;
 
-
-
       var staticTest = /\.png|\.jpg|\.css|\.js/i;
       if (rootURL=="" || url.indexOf(rootURL)===-1 /*|| staticTest.test(url)*/){
 
@@ -438,8 +436,8 @@ var gallery = {
                           width:   128
                       }, function(err, binary, stderr){
                           if (err){
-                              util.inspect(err);
-                              res.send('error generating thumb');
+                              console.log(err);
+                              return res.send(err);
                           }
 
                           fs.writeFileSync(imagePath + '.thumb.jpg', binary, 'binary');
@@ -447,7 +445,7 @@ var gallery = {
                           res.contentType('image/jpg');
                           res.end(binary, 'binary');
 
-                          me.imageCache[imagePath] = binary;
+                          ///me.imageCache[imagePath] = binary;
                       });
                   });
               }
