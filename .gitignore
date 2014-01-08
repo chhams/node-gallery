@@ -1,6 +1,6 @@
 .project
 .idea
-
+/resources/*
 .settings
 .DS_Store
 */.DS_Store
