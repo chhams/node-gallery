@@ -86,6 +86,37 @@ var gallery = {
         rootDir: rootlessRoot
       };
 
+
+
+      if(file.name.indexOf('thumb') == -1){
+          var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
+          console.log(fullname);
+
+          fs.exists(fullname + '.thumb.jpg', function (exists) {
+              if(!exists){
+                  fs.readFile(fullname, 'binary', function(err, file){
+                      if (!err){
+                          im.resize({
+                              srcData: file,
+                              width:   128
+                          }, function(err, binary){
+                              if (!err){
+                                  fs.writeFileSync(fullname + '.thumb.jpg', binary, 'binary');
+                                  console.log("Created " + fullname + '.thumb.jpg');
+                              }
+                              else{
+                                  console.log("Error in " + fullname + " " + err);
+                              }
+                          });
+                      }
+                      else{
+                          console.log("Error in " + fullname + " " + err);
+                      }
+                  });
+              }
+          });
+      }
+
       files.push(file);
       return next();
 
@@ -193,12 +224,12 @@ var gallery = {
           });
         })(photo, curAlbum);
 
-          console.log(photo.name)
+          //console.log(photo.name)
           if(photo.name.indexOf('thumb') == -1){
               curAlbum.photos.push(photo);
           }
           else{
-              console.log('Ignoring: ' + photo.name);
+              //console.log('Ignoring: ' + photo.name);
           }
       }
     }
@@ -313,7 +344,7 @@ var gallery = {
         if (photo.name===photoName){
 
             var t =  "resources/" + gallery.directory + "/" + photo.path;
-            console.log(t);
+            //console.log(t);
 
             fs.readFile(t, 'binary', function(err, file){
             im.resize({
