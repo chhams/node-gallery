@@ -87,7 +87,7 @@ var gallery = {
       };
 
 
-
+      // -> function
       if(file.name.indexOf('thumb') == -1){
           var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
           console.log(fullname);
@@ -115,6 +115,32 @@ var gallery = {
                   });
               }
           });
+
+
+          fs.exists(fullname + '.thumb.800.jpg', function (exists) {
+              if(!exists){
+                  fs.readFile(fullname, 'binary', function(err, file){
+                      if (!err){
+                          im.resize({
+                              srcData: file,
+                              width:   1200
+                          }, function(err, binary){
+                              if (!err){
+                                  fs.writeFileSync(fullname + '.thumb.800.jpg', binary, 'binary');
+                                  console.log("Created " + fullname + '.thumb.800.jpg');
+                              }
+                              else{
+                                  console.log("Error in " + fullname + " " + err);
+                              }
+                          });
+                      }
+                      else{
+                          console.log("Error in " + fullname + " " + err);
+                      }
+                  });
+              }
+          });
+
       }
 
       files.push(file);
