@@ -15,6 +15,7 @@
     "walk": "*",
     "express": "3.0",
     "ejs": "*",
+    "sync": "*",
     "exif": "git://github.com/cianclarke/node-exif.git",
     "imagemagick" : "*"
   },
