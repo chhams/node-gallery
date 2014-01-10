@@ -3,6 +3,7 @@ var fs = require('fs'),
     walk = require('walk'),
     util = require('util'),
     path = require('path'),
+    async = require('async') ,
     im = require('imagemagick');
 
 var gallery = {
@@ -90,49 +91,38 @@ var gallery = {
             };
 
 
-            if (file.name.indexOf('thumb') == -1) {
-                var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
-                console.log(fullname);
-
-                fs.exists(fullname + '.thumb.jpg', function (exists) {
-                    if (!exists) {
-                        fs.readFile(fullname, 'binary', function (err, file) {
-                            if (!err) {
-                                im.resize({
-                                    srcData: file,
-                                    width: 128
-                                }, function (err, binary) {
-                                    if (!err) {
-                                        fs.writeFileSync(fullname + '.thumb.jpg', binary, 'binary');
-                                        console.log("Created " + fullname + '.thumb.jpg');
-                                    }
-                                    else {
-                                        console.log("Error in " + fullname + " " + err);
-                                    }
-                                });
-                            }
-                            else {
-                                console.log("Error in " + fullname + " " + err);
-                            }
-                        });
-                    }
-                });
-
-
-                test(fullname, 1000, function(err, newFile) {
-                        if(err){
-                            console.log("Error 123: " + err);
-
-                        }
-                    else{
-                            console.log("Got a new File: " + newFile);
-                        }
-
-                });
-
-                console.log("behind");
-
-            }
+//            if (file.name.indexOf('thumb') == -1) {
+//                var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
+//                console.log(fullname);
+//
+//                fs.exists(fullname + '.thumb.jpg', function (exists) {
+//                    if (!exists) {
+//                        fs.readFile(fullname, 'binary', function (err, file) {
+//                            if (!err) {
+//                                im.resize({
+//                                    srcData: file,
+//                                    width: 128
+//                                }, function (err, binary) {
+//                                    if (!err) {
+//                                        fs.writeFileSync(fullname + '.thumb.jpg', binary, 'binary');
+//                                        console.log("Created " + fullname + '.thumb.jpg');
+//                                    }
+//                                    else {
+//                                        console.log("Error in " + fullname + " " + err);
+//                                    }
+//                                });
+//                            }
+//                            else {
+//                                console.log("Error in " + fullname + " " + err);
+//                            }
+//                        });
+//                    }
+//                });
+//
+//
+//                console.log("behind");
+//
+//            }
 
             files.push(file);
             return next();
@@ -140,10 +130,30 @@ var gallery = {
         });
 
         walker.on('end', function () {
+            //http://www.sebastianseilund.com/nodejs-async-in-practice
+            async.forEachLimit(files, 2, function (file, newFile) {
+
+                if (file.name.indexOf('thumb') == -1) {
+                    var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
+                    console.log(fullname);
+
+                    test(fullname, 1000, function (err, newFile) {
+                        if (err) {
+                            console.log("Error 123: " + err);
+                        }
+                        else {
+                            console.log("Got a new File: " + newFile);
+                        }
+                    });
+                }
+                newFile(null, file);
+            });
+
+
             return cb(null, files);
         });
 
-        function test(fullname, widthNew, cb){
+        function test(fullname, widthNew, cb) {
 
             fs.readFile(fullname, 'binary', function (err, file) {
                 if (!err) {
