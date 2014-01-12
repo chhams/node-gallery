@@ -90,108 +90,62 @@ var gallery = {
                 rootDir: rootlessRoot
             };
 
-
-//            if (file.name.indexOf('thumb') == -1) {
-//                var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
-//                console.log(fullname);
-//
-//                fs.exists(fullname + '.thumb.jpg', function (exists) {
-//                    if (!exists) {
-//                        fs.readFile(fullname, 'binary', function (err, file) {
-//                            if (!err) {
-//                                im.resize({
-//                                    srcData: file,
-//                                    width: 128
-//                                }, function (err, binary) {
-//                                    if (!err) {
-//                                        fs.writeFileSync(fullname + '.thumb.jpg', binary, 'binary');
-//                                        console.log("Created " + fullname + '.thumb.jpg');
-//                                    }
-//                                    else {
-//                                        console.log("Error in " + fullname + " " + err);
-//                                    }
-//                                });
-//                            }
-//                            else {
-//                                console.log("Error in " + fullname + " " + err);
-//                            }
-//                        });
-//                    }
-//                });
-//
-//
-//                console.log("behind");
-//
-//            }
-
             files.push(file);
             return next();
 
         });
 
         walker.on('end', function () {
-            //http://www.sebastianseilund.com/nodejs-async-in-practice
             async.forEachLimit(files, 2, function (file, newFileTest) {
 
                 if (file.name.indexOf('thumb') == -1) {
                     var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
-                    console.log(fullname);
-
-                    test(fullname, 1000, function (err, newFile) {
-                        if (err) {
-                            console.log("Error 123: " + err);
+                    test(fullname, '.thumb.jpg', 150, function () {
+                        test(fullname, '.thumb.1000.jpg', 1000, function () {
                             newFileTest(null, file);
+                        });
+                    });
+                }
+                else{
+                    newFileTest(null, file);
+                }
+            });
+
+
+            console.log("Walker is done...")
+            return cb(null, files);
+        });
+
+        function test(fullname, newName, widthNew, cb) {
+
+            fs.exists(fullname + newName, function (exists) {
+                if (!exists) {
+                    fs.readFile(fullname, 'binary', function (err, file) {
+                        if (!err) {
+                            im.resize({
+                                srcData: file,
+                                width: widthNew
+                            }, function (err, binary) {
+                                if (!err) {
+                                    fs.writeFileSync(fullname + newName, binary, 'binary');
+                                    console.log("Created " + fullname + newName);
+                                    cb();
+                                }
+                                else {
+                                    console.log("Imagemagick error in " + fullname + " " + err);
+                                    cb();
+                                }
+                            });
                         }
                         else {
-                            console.log("Got a new File: " + newFile);
-                            newFileTest(null, file);
+                            console.log("Error in reading " + fullname + " " + err);
+                            cb();
                         }
                     });
                 }
                 else{
-                    console.log("ignoring thumb: " + file)
-                    newFileTest(null, file);
+                    cb();
                 }
-
-            });
-
-
-            console.log("Done...")
-            return cb(null, files);
-        });
-
-        function test(fullname, widthNew, cb) {
-
-            fs.exists(fullname + '.thumb.932.jpg', function (exists) {
-                    if (!exists) {
-                        fs.readFile(fullname, 'binary', function (err, file) {
-                            console.log(fullname + " is read...")
-                            if (!err) {
-                                im.resize({
-                                    srcData: file,
-                                    width: widthNew
-                                }, function (err, binary) {
-                                    if (!err) {
-                                        fs.writeFileSync(fullname + '.thumb.932.jpg', binary, 'binary');
-                                        console.log("Created " + fullname + '.thumb.932.jpg');
-                                        cb(null, fullname + '.thumb.932.jpg');
-                                    }
-                                    else {
-                                        console.log("Error in " + fullname + " " + err);
-                                        cb(err, null);
-                                    }
-                                });
-                            }
-                            else {
-                                console.log("Error in " + fullname + " " + err);
-                                cb(err, null);
-                            }
-                        });
-                    }
-                else{
-                        console.log(fullname + " already done...");
-                        cb(null, null);
-                    }
             });
 
         };
@@ -412,24 +366,6 @@ var gallery = {
             for (var i = 0; i < photos.length; i++) {
                 var photo = photos[i];
                 if (photo.name === photoName) {
-
-                    var t = "resources/" + gallery.directory + "/" + photo.path;
-                    //console.log(t);
-
-                    fs.readFile(t, 'binary', function (err, file) {
-                        im.resize({
-                            srcData: file,
-                            width: 1200
-                        }, function (err, binary, stderr) {
-                            if (err) {
-                                console.log(err);
-                            }
-                            else {
-                                fs.writeFileSync(t + '.thumb.800.jpg', binary, 'binary');
-                            }
-                        });
-                    });
-
                     return gallery.afterGettingItem(null, {type: 'photo', photo: photo}, cb);
                 }
             }
@@ -528,10 +464,8 @@ var gallery = {
                     url = req.url = url.replace("&tn=1", "");
                     var imagePath = me.static + decodeURI(url);
 
-                    console.log("Urg: " + imagePath)
                     fs.exists(imagePath + '.thumb.jpg', function (exists) {
                         if (exists) {
-                            console.log("Is on disk...");
                             fs.readFile(imagePath + '.thumb.jpg', 'binary', function (err, file) {
                                 if (err) {
                                     console.log(err);
@@ -542,32 +476,8 @@ var gallery = {
                                 res.contentType('image/jpg');
                                 res.end(file, 'binary');
                             });
-                            //res.contentType('image/jpg');
-                            //res.end(me.imageCache[imagePath], 'binary');
                         } else {
-                            console.log("Is NOT cached...");
-                            fs.readFile(imagePath, 'binary', function (err, file) {
-                                if (err) {
-                                    console.log(err);
-                                    return res.send(err);
-                                }
-                                im.resize({
-                                    srcData: file,
-                                    width: 128
-                                }, function (err, binary, stderr) {
-                                    if (err) {
-                                        console.log(err);
-                                        return res.send(err);
-                                    }
-
-                                    fs.writeFileSync(imagePath + '.thumb.jpg', binary, 'binary');
-
-                                    res.contentType('image/jpg');
-                                    res.end(binary, 'binary');
-
-                                    ///me.imageCache[imagePath] = binary;
-                                });
-                            });
+                            console.log("image not found");
                         }
                     });
                     return;
