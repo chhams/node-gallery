@@ -190,6 +190,7 @@ var gallery = {
                     }
                 else{
                         console.log(fullname + " already done...");
+                        cb(null, null);
                     }
             });
 
