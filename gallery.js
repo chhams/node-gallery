@@ -131,7 +131,7 @@ var gallery = {
 
         walker.on('end', function () {
             //http://www.sebastianseilund.com/nodejs-async-in-practice
-            async.forEachLimit(files, 2, function (file, newFile) {
+            async.forEachLimit(files, 2, function (file, newFileTest) {
 
                 if (file.name.indexOf('thumb') == -1) {
                     var fullname = "resources/photos/" + file.rootDir + "/" + file.name;
@@ -140,13 +140,18 @@ var gallery = {
                     test(fullname, 1000, function (err, newFile) {
                         if (err) {
                             console.log("Error 123: " + err);
+                            newFileTest(null, file);
                         }
                         else {
                             console.log("Got a new File: " + newFile);
+                            newFileTest(null, file);
                         }
                     });
                 }
-                newFile(null, file);
+                else{
+                    newFileTest(null, file);
+                }
+
             });
 
 
@@ -155,29 +160,36 @@ var gallery = {
 
         function test(fullname, widthNew, cb) {
 
-            fs.readFile(fullname, 'binary', function (err, file) {
-                if (!err) {
-                    im.resize({
-                        srcData: file,
-                        width: widthNew
-                    }, function (err, binary) {
-                        if (!err) {
-                            fs.writeFileSync(fullname + '.thumb.930.jpg', binary, 'binary');
-                            console.log("Created " + fullname + '.thumb.930.jpg');
-                            cb(null, fullname + '.thumb.930.jpg');
-                        }
-                        else {
-                            console.log("Error in " + fullname + " " + err);
-                            cb(err, null);
-                        }
-                    });
-                }
-                else {
-                    console.log("Error in " + fullname + " " + err);
-                    cb(err, null);
-                }
+            fs.exists(fullname + '.thumb.932.jpg', function (exists) {
+                    if (!exists) {
+                        fs.readFile(fullname, 'binary', function (err, file) {
+                            console.log(fullname + " is read...")
+                            if (!err) {
+                                im.resize({
+                                    srcData: file,
+                                    width: widthNew
+                                }, function (err, binary) {
+                                    if (!err) {
+                                        fs.writeFileSync(fullname + '.thumb.932.jpg', binary, 'binary');
+                                        console.log("Created " + fullname + '.thumb.932.jpg');
+                                        cb(null, fullname + '.thumb.932.jpg');
+                                    }
+                                    else {
+                                        console.log("Error in " + fullname + " " + err);
+                                        cb(err, null);
+                                    }
+                                });
+                            }
+                            else {
+                                console.log("Error in " + fullname + " " + err);
+                                cb(err, null);
+                            }
+                        });
+                    }
+                else{
+                        console.log(fullname + " already done...");
+                    }
             });
-
 
         };
     },
