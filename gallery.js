@@ -149,12 +149,14 @@ var gallery = {
                     });
                 }
                 else{
+                    console.log("ignoring thumb: " + file)
                     newFileTest(null, file);
                 }
 
             });
 
 
+            console.log("Done...")
             return cb(null, files);
         });
 
